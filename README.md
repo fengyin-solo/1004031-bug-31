@@ -69,3 +69,22 @@ npm run build
   `frontend/src/data/seed.ts`。
 - 状态流转只允许在 `local-service.ts` 里改，页面组件不做业务判断。
 - 想回到初始数据：清掉浏览器里 `underground-pipeline-inspection:entries` 这一项，或调用 `resetModule(模块)`。
+
+## 水质监测批量录入
+
+水质监测模块支持多选「已取样」样本批量录入检测结果（`frontend/src/api/batch-entry.ts`）：
+
+- **逐条容错**：单条数值超出有效范围只记该条失败，整批继续；失败样本保留原状态并标为待处理，
+  集中展示在页面上方的「待重试项」里。
+- **幂等**：一次提交对应一个批次（submitId 幂等键），重复提交、重复执行都不会让运营概览多计数。
+- **并发保护**：同一样本已被其他批次/标签页录入时，后来者跳过并保留首次结果。
+- **历史可追溯**：每条样本的录入尝试（成功/失败）都追加到详情抽屉的录入历史里，只增不减。
+- **断点续传**：批次进度每条落盘一次（`underground-pipeline-inspection:batches`），
+  中断后从失败条目继续，修正数值后重试即可。
+
+引擎冒烟测试（node 环境，无需浏览器）：
+
+```bash
+cd frontend
+npm test
+```

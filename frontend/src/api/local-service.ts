@@ -1,6 +1,15 @@
 import { MODULE_BY_KEY } from '@/data/modules'
-import { allRows, listRows, resetRows, saveRows } from '@/data/local-store'
+import { allRows, getRow, listRows, resetRows, saveRows } from '@/data/local-store'
 import type { ActionResult, EntryRow, ModuleMeta, OverviewResult, PageResult } from '@/data/types'
+
+// 批量录入引擎单独成文件，页面仍然只从 local-service 取数
+export {
+  batchEntryRules,
+  createBatchEntry,
+  listBatchEntries,
+  runBatchEntry,
+  updateBatchEntryItems,
+} from './batch-entry'
 
 // 会写进数据的「往回走」动作：命中就把这条记录标成异常态，看板上能一眼看出来。
 const NEGATIVE_ACTIONS = ['撤销', '作废', '拒绝', '驳回', '停用', '忽略', '下线', '回滚']
@@ -26,6 +35,11 @@ export function filterRows(rows: EntryRow[], filters: Record<string, string>): E
 export function listEntries(key: string, filters: Record<string, string> = {}): PageResult {
   const matched = filterRows(listRows(key), filters)
   return { items: matched, total: matched.length, page: 1, size: matched.length }
+}
+
+/** 详情抽屉用：读最新快照，批量录入后列表和详情看到的一定是同一份数据。 */
+export function getEntryDetail(key: string, id: number): EntryRow | undefined {
+  return getRow(key, id)
 }
 
 export function runAction(key: string, id: number, action: string): ActionResult {
