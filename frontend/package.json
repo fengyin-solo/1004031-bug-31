@@ -8,7 +8,9 @@
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
-    "typecheck": "vue-tsc --noEmit"
+    "typecheck": "vue-tsc --noEmit",
+    "test:batch": "node scripts/test-water-quality-batch.mjs",
+    "test:restore": "node scripts/test-water-quality-restore.mjs"
   },
   "dependencies": {
     "pinia": "^2.1.7",

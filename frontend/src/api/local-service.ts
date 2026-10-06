@@ -1,6 +1,6 @@
 import { MODULE_BY_KEY } from '@/data/modules'
 import { allRows, listRows, resetRows, saveRows } from '@/data/local-store'
-import type { ActionResult, EntryRow, ModuleMeta, OverviewResult, PageResult } from '@/data/types'
+import type { ActionResult, EntryHistory, EntryRow, ModuleMeta, OverviewResult, PageResult } from '@/data/types'
 
 // 会写进数据的「往回走」动作：命中就把这条记录标成异常态，看板上能一眼看出来。
 const NEGATIVE_ACTIONS = ['撤销', '作废', '拒绝', '驳回', '停用', '忽略', '下线', '回滚']
@@ -44,11 +44,17 @@ export function runAction(key: string, id: number, action: string): ActionResult
     return { ok: false, message: `${meta.entity}已经是「${target}」，不用重复操作` }
   }
   const lastStatus = meta.statuses[meta.statuses.length - 1]
+  // 历史记录只追加不改写：列表与详情读的是同一份数据，任何流转都要在时间线上留痕。
+  const history: EntryHistory[] = [
+    ...(rows[index].history ?? []),
+    { time: new Date().toISOString(), action, result: 'success', detail: `状态流转为「${target}」` },
+  ]
   const updated: EntryRow = {
     ...rows[index],
     status: target,
     pending: target !== lastStatus,
     abnormal: NEGATIVE_ACTIONS.some((verb) => action.startsWith(verb)),
+    history,
   }
   const next = [...rows]
   next[index] = updated
